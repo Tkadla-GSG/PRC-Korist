@@ -16,6 +16,14 @@
 using namespace std;
 
 /**
+ * GLOBAL VARS
+ */
+int * prices;
+int thiefs;
+int things;
+int loot;
+
+/**
  * Debug - array printer
  * @param array
  * @param length
@@ -44,17 +52,9 @@ public:
      * @param bags      - array with current prices in bags
      * @param level     - how many things have been already added to the bags
      */
-    State(int * prices, int thiefs, int things, int * bags, int level) {
-        this->prices = prices;
-        this->thiefs = thiefs;
-        this->things = things;
+    State(int * bags, int level) {
         this->bags = bags;
         this->level = level;
-
-        //work out loot value
-        for (int i = 0; i < things; i++) {
-            this->loot += prices[i];
-        }
     }
 
     /**
@@ -66,12 +66,8 @@ public:
     }
 
 private:
-    int * prices;
-    int thiefs;
-    int things;
     int * bags;
     int level;
-    int loot;
 
 public:
 
@@ -98,7 +94,7 @@ public:
             // dispance thing into one bag
             newBags[i] += prices[level];
 
-            State * newState = new State(prices, thiefs, things, newBags, level + 1);
+            State * newState = new State( newBags, level + 1);
             mainStack.push(newState);
 
             //DEBUG
@@ -115,9 +111,12 @@ public:
 
         double max = 0.0;
         this->dumpState();
-        for (int i = 0; i < this->thiefs; i++) {
-            double value = fabs(this->bags[i] - (this->loot / this->thiefs));
-            cout << "bag " << i << " |  " << value << endl;  
+        for (int i = 0; i < thiefs; i++) {
+            cout << "bag " << this->bags[i] << endl;
+            cout << "loot " << loot << endl;
+            cout << "thiefs " << thiefs << endl;
+            double value = fabs(this->bags[i] - (loot / thiefs));
+            cout << "fairness " << i << " |  " << value << endl;
             if (value > max) {
                 max = value;
             }
@@ -154,7 +153,7 @@ State * work(stack < State * > & mainStack) {
         double currentValue = current->solve();
         //push all its childrens into stack
         current->getChildren(mainStack);
-        cout << "value " << currentValue << endl; 
+        cout << "value " << currentValue << endl;
         if (currentValue < min) {
 
             if (minState != NULL) {
@@ -190,14 +189,14 @@ int main(int argc, char** argv) {
     string line;
     // Prvni radek je pocet zlodeju 
     getline(file, line);
-    int thiefs = atoi(line.c_str());
+    thiefs = atoi(line.c_str());
 
     // Druhy radek je pocet kusu lupu
     getline(file, line);
-    int things = atoi(line.c_str());
+    things = atoi(line.c_str());
 
     // jednicky v radku generatoru grafu sectu a dostanu tak cenu jedne veci
-    int * prices = new int [things];
+    prices = new int [things];
 
     for (int j = 0; j < things; j++) {
 
@@ -213,6 +212,11 @@ int main(int argc, char** argv) {
         prices[j] = price;
     }
 
+    //work out loot value
+    for (int i = 0; i < things; i++) {
+        loot += prices[i];
+    }
+
     // Stavovy zasobnik
     stack < State * > mainStack;
 
@@ -222,17 +226,18 @@ int main(int argc, char** argv) {
         bags[i] = 0;
     }
 
-    State * init = new State(prices, thiefs, things, bags, 0);
+    State * init = new State(bags, 0);
 
     mainStack.push(init);
 
     State * result = work(mainStack);
-    
+
     cout << "///////// RESULT //////////" << endl;
     result->dumpState();
-    cout << "fair factor " << result->solve() << endl; 
+    cout << "fair factor " << result->solve() << endl;
     cout << "/////////////////////////////" << endl;
 
+    /*
     // cleanup
     delete result; 
     result = NULL; 
@@ -245,6 +250,8 @@ int main(int argc, char** argv) {
         mainStack.pop();
         delete current;
     }
+     */
+
 
     return 0;
 }

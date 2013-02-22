@@ -30,7 +30,6 @@ int loot;
  */
 void array_dump(int * array, int length) {
 
-    cout << "Array dump" << endl;
     for (int i = 0; i < length; i++) {
         cout << array[i] << " | ";
     }
@@ -68,6 +67,28 @@ public:
 private:
     int * bags;
     int level;
+    double fairness;
+    
+    /**
+     * Calculate fairness of this state and returns it as absolute value
+     * @return 
+     */
+    void solve() {
+
+        double max = 0.0;
+        for (int i = 0; i < thiefs; i++) {
+            double value = fabs(this->bags[i] - (loot / thiefs));
+            //cout << "fairness " << i << " |  " << value << endl;
+            if (value > max) {
+                max = value;
+            }
+        }
+
+        this->fairness = max;
+        
+        // DEBUG
+        this->dumpState();
+    }
 
 public:
 
@@ -94,7 +115,9 @@ public:
             // dispance thing into one bag
             newBags[i] += prices[level];
 
-            State * newState = new State( newBags, level + 1);
+            State * newState = new State(newBags, level + 1);
+            newState->solve(); 
+            
             mainStack.push(newState);
 
             //DEBUG
@@ -102,27 +125,9 @@ public:
             //newState->dumpState();
         }
     }
-
-    /**
-     * Calculate fairness of this state and returns it as absolute value
-     * @return 
-     */
-    double solve() {
-
-        double max = 0.0;
-        this->dumpState();
-        for (int i = 0; i < thiefs; i++) {
-            cout << "bag " << this->bags[i] << endl;
-            cout << "loot " << loot << endl;
-            cout << "thiefs " << thiefs << endl;
-            double value = fabs(this->bags[i] - (loot / thiefs));
-            cout << "fairness " << i << " |  " << value << endl;
-            if (value > max) {
-                max = value;
-            }
-        }
-
-        return max;
+    
+    double getFairness(){
+        return this->fairness; 
     }
 
     /**
@@ -130,10 +135,11 @@ public:
      */
     void dumpState() {
 
-        cout << "State Dump" << endl;
+        cout << "///////State Dump///////" << endl;
         array_dump(bags, thiefs);
         cout << "level: " << level << endl;
-        cout << "//////////////" << endl << endl;
+        cout << "fairness: " << fairness << endl;
+        cout << "////////////////////////" << endl << endl;
         ;
 
     }
@@ -142,24 +148,28 @@ public:
 
 State * work(stack < State * > & mainStack) {
 
-    double min = numeric_limits<int>::max();
+    double min = numeric_limits<double>::max();
     State * minState = NULL;
+    State * current = NULL;
+    double currentValue = 0; 
 
     while (!mainStack.empty()) {
-        State * current = mainStack.top();
+        current = mainStack.top();
         mainStack.pop();
 
         //get fairness of current state
-        double currentValue = current->solve();
+        currentValue = current->getFairness();
         //push all its childrens into stack
         current->getChildren(mainStack);
-        cout << "value " << currentValue << endl;
-        if (currentValue < min) {
 
+        // <= je tady proto, protoze takhle chytnu nejvic fair rozdeleni NEJVIC predmetu
+        if (currentValue <= min) {
+            
             if (minState != NULL) {
                 delete minState;
             }
 
+            min = currentValue; 
             minState = current;
 
         } else {
@@ -234,10 +244,10 @@ int main(int argc, char** argv) {
 
     cout << "///////// RESULT //////////" << endl;
     result->dumpState();
-    cout << "fair factor " << result->solve() << endl;
+    cout << "fair factor " << result->getFairness() << endl;
     cout << "/////////////////////////////" << endl;
 
-    /*
+    
     // cleanup
     delete result; 
     result = NULL; 
@@ -245,13 +255,12 @@ int main(int argc, char** argv) {
     delete bags;
     bags = NULL;
 
+    /*State * current = NULL;
     while (!mainStack.empty()) {
-        State * current = mainStack.top();
+        current = mainStack.top();
         mainStack.pop();
         delete current;
-    }
-     */
-
+    }*/
 
     return 0;
 }

@@ -45,15 +45,13 @@ public:
 
     /**
      * Constructor
-     * @param prices    - array of prices of things
-     * @param thiefs    - number of thiefs (lenght of bags array)
-     * @param things    - number of things
      * @param bags      - array with current prices in bags
      * @param level     - how many things have been already added to the bags
      */
     State(int * bags, int level) {
         this->bags = bags;
         this->level = level;
+        this->fairness = 0.0; 
     }
 
     /**
@@ -244,7 +242,6 @@ int main(int argc, char** argv) {
 
     cout << "///////// RESULT //////////" << endl;
     result->dumpState();
-    cout << "fair factor " << result->getFairness() << endl;
     cout << "/////////////////////////////" << endl;
 
     
@@ -252,15 +249,15 @@ int main(int argc, char** argv) {
     delete result; 
     result = NULL; 
     
-    delete bags;
-    bags = NULL;
-
-    /*State * current = NULL;
+    delete prices;
+    prices = NULL; 
+   
+    State * current = NULL;
     while (!mainStack.empty()) {
         current = mainStack.top();
         mainStack.pop();
         delete current;
-    }*/
+    }
 
     return 0;
 }
